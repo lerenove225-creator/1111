@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     xfce4 xfce4-terminal firefox wine64 wget dbus-x11 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Téléchargement de MT5
+# On télécharge MT5
 RUN wget https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe -O /tmp/mt5setup.exe
 
 RUN useradd -m -u 1000 user
@@ -21,10 +21,9 @@ USER user
 # Port Render
 EXPOSE 10000
 
-# Commande corrigée : on utilise 'novnc_proxy' directement s'il est dans le PATH 
-# ou on le cherche via son nom universel
+# Commande robuste qui cherche le proxy novnc automatiquement
 CMD rm -rf /tmp/.X* && \
     (Xvfb :1 -screen 0 1280x720x24 &) && sleep 3 && \
     (DISPLAY=:1 startxfce4 &) && sleep 3 && \
     (x11vnc -display :1 -nopw -forever -listen 127.0.0.1 &) && sleep 3 && \
-    /usr/bin/novnc_proxy --vnc 127.0.0.1:5900 --listen 10000
+    exec websockify --web /usr/share/novnc 10000 localhost:5900
